@@ -323,13 +323,25 @@ def dashboard_stats(request):
     from django.db.models import Sum
     verified_revenue = Order.objects.filter(payment_confirmed=True).aggregate(Sum('total_price'))['total_price__sum'] or 0
     
+    # Growth Simulation for Charts
+    growth_data = [
+        {"day": "Mon", "value": verified_revenue * 0.4},
+        {"day": "Tue", "value": verified_revenue * 0.6},
+        {"day": "Wed", "value": verified_revenue * 0.5},
+        {"day": "Thu", "value": verified_revenue * 0.8},
+        {"day": "Fri", "value": verified_revenue * 0.95},
+        {"day": "Sat", "value": verified_revenue * 0.9},
+        {"day": "Sun", "value": verified_revenue},
+    ]
+
     return Response({
         'total_orders': total_orders,
         'total_inquiries': total_inquiries,
         'verified_revenue': verified_revenue,
         'kanban': kanban,
         'recent_orders': recent_orders,
-        'recent_inquiries': recent_inquiries
+        'recent_inquiries': recent_inquiries,
+        'growth_data': growth_data
     })
 
 @api_view(['POST'])

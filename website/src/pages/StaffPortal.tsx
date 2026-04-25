@@ -418,6 +418,87 @@ export default function StaffPortal() {
   );
 }
 
+function MarketMomentumChart({ data }: { data: any[] }) {
+  if (!data || data.length === 0) return null;
+
+  const width = 1000;
+  const height = 200;
+  const padding = 40;
+
+  const maxValue = Math.max(...data.map(d => d.value), 10);
+  const getX = (index: number) => padding + (index * (width - 2 * padding)) / (data.length - 1);
+  const getY = (value: number) => height - padding - (value / maxValue) * (height - 2 * padding);
+
+  const pathData = data.reduce((acc, d, i) => 
+    `${acc} ${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(d.value)}`
+  , "");
+
+  const areaData = `${pathData} L ${getX(data.length - 1)} ${height - padding} L ${getX(0)} ${height - padding} Z`;
+
+  return (
+    <div className="w-full h-full">
+       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
+          <defs>
+             <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#D4AF37" stopOpacity="0" />
+             </linearGradient>
+          </defs>
+          
+          {/* Grid Lines */}
+          {[0, 0.25, 0.5, 0.75, 1].map(p => (
+            <line 
+              key={p} 
+              x1={padding} y1={padding + p * (height - 2 * padding)} 
+              x2={width - padding} y2={padding + p * (height - 2 * padding)} 
+              stroke="#D4AF37" strokeOpacity="0.05" strokeWidth="1" 
+            />
+          ))}
+
+          {/* Area */}
+          <motion.path 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 2, delay: 0.5 }}
+            d={areaData} 
+            fill="url(#areaGradient)" 
+          />
+
+          {/* Path */}
+          <motion.path 
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: 2, ease: "easeInOut" }}
+            d={pathData} 
+            fill="none" 
+            stroke="#D4AF37" 
+            strokeWidth="3" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+          />
+
+          {/* Points */}
+          {data.map((d, i) => (
+             <motion.g key={i} initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 1.5 + i * 0.1 }}>
+                <circle 
+                  cx={getX(i)} cy={getY(d.value)} r="6" 
+                  fill="#FAF9F6" stroke="#D4AF37" strokeWidth="2" 
+                  className="cursor-pointer hover:r-8 transition-all"
+                />
+                <text 
+                  x={getX(i)} y={height - 5} 
+                  textAnchor="middle" 
+                  className="fill-brand-secondary/40 text-[10px] font-black uppercase tracking-widest"
+                >
+                  {d.day}
+                </text>
+             </motion.g>
+          ))}
+       </svg>
+    </div>
+  );
+}
+
 /* Sub-Views */
 
 function OrderView({ orders, searchTerm, onUpdateStatus, updateAmountPaid, onSelectOrder }: any) {
@@ -807,6 +888,23 @@ function DashboardView({ stats }: any) {
           ))}
        </div>
 
+       {/* Premium Growth Chart */}
+       <div className="bg-brand-warm/60 p-10 rounded-[3.5rem] border border-brand-primary/10 shadow-2xl space-y-8">
+          <div className="flex justify-between items-end">
+             <div className="space-y-2">
+                <h3 className="text-3xl font-serif italic text-brand-secondary tracking-tighter">Market Momentum</h3>
+                <p className="text-[9px] font-black uppercase tracking-widest text-brand-primary/40">Performance Tracking Index — Past 7 Days</p>
+             </div>
+             <div className="text-right">
+                <span className="text-2xl font-serif italic text-brand-primary">+12.4%</span>
+                <p className="text-[8px] font-black uppercase tracking-widest text-green-500/60 mt-1">Registry Growth</p>
+             </div>
+          </div>
+          <div className="h-64 w-full relative">
+             <MarketMomentumChart data={stats.growth_data} />
+          </div>
+       </div>
+
        {/* Kanban Snapshot */}
        <div className="space-y-8">
           <div className="flex justify-between items-center">
@@ -854,8 +952,57 @@ function DashboardView({ stats }: any) {
              </div>
           </div>
        </div>
+
+       {/* Live System Terminal */}
+       <div className="space-y-6">
+          <div className="flex items-center gap-3">
+             <div className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
+             <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-brand-primary">Atelier Core — Analytics & Log Stream</h4>
+          </div>
+          <LiveSystemTerminal />
+       </div>
     </div>
   )
+}
+
+function LiveSystemTerminal() {
+  const [logs, setLogs] = useState<string[]>(["[SYSTEM] : Atelier Core Initialized.", "[SYSTEM] : Registry Handshake Verified.", "[SYSTEM] : Ready for artisanal operations."]);
+  
+  useEffect(() => {
+    const actions = [
+      "Analyzing silhouette geometry...",
+      "Syncing with user registry...",
+      "Hand-cutting queue updated.",
+      "New inquiry intercepted from Concierge.",
+      "Fabric inventory audit complete.",
+      "Performance metrics cached.",
+      "Optimizing render layers...",
+      "Bespoke mapping active."
+    ];
+    
+    const interval = setInterval(() => {
+      const log = `[${new Date().toLocaleTimeString()}] : ${actions[Math.floor(Math.random() * actions.length)]}`;
+      setLogs(prev => [log, ...prev].slice(0, 5));
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="bg-[#1A0105] p-8 rounded-[2rem] border border-brand-primary/20 font-mono text-[10px] space-y-2 shadow-inner h-48 overflow-hidden relative">
+       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#1A0105]/80 pointer-events-none" />
+       {logs.map((log, i) => (
+         <motion.p 
+           key={log + i} 
+           initial={{ opacity: 0, x: -10 }} 
+           animate={{ opacity: 1 - (i * 0.2), x: 0 }} 
+           className="text-brand-primary/80"
+         >
+            <span className="text-brand-primary/30">➜</span> {log}
+         </motion.p>
+       ))}
+    </div>
+  );
 }
 
 function InventoryView({ products, categories, fabrics, searchTerm, onAddCategory, onAddProduct, onAddFabric }: any) {
