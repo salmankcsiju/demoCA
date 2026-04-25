@@ -31,7 +31,23 @@ interface Order {
   type: 'standard' | 'bespoke';
 }
 
-
+interface BespokeOrder {
+  id: number;
+  status: string;
+  status_display: string;
+  total_price: string;
+  created_at: string;
+  fabric_name: string;
+  sleeve_name: string;
+  neck_name: string;
+  original_photo: string;
+  custom_fabric_preference: string;
+  measurements: {
+    id: number;
+    part_name: string;
+    value: number;
+  }[];
+}
 
 interface ClientDiary {
   id: number;
@@ -219,7 +235,6 @@ export default function StaffPortal() {
     alert("Atelier Settings Synchronized");
   };
 
-  return (
     <div className="min-h-screen bg-brand-accent selection:bg-brand-primary/30">
         
       {/* Side Navigation */}
@@ -417,7 +432,6 @@ function MarketMomentumChart({ data }: { data: any[] }) {
 
   const areaData = `${pathData} L ${getX(data.length - 1)} ${height - padding} L ${getX(0)} ${height - padding} Z`;
 
-  return (
     <div className="w-full h-full">
        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
           <defs>
@@ -491,7 +505,6 @@ function OrderView({ orders, searchTerm, onUpdateStatus, updateAmountPaid, onSel
      return idx < statusCycle.length - 1 ? statusCycle[idx + 1] : statusCycle[0];
    };
 
-   return (
       <div className="bg-brand-warm/40 rounded-[2rem] md:rounded-[3.5rem] shadow-2xl border border-brand-primary/30 overflow-hidden backdrop-blur-3xl">
          <table className="w-full text-left border-collapse">
             <thead>
@@ -502,7 +515,6 @@ function OrderView({ orders, searchTerm, onUpdateStatus, updateAmountPaid, onSel
                </tr>
             </thead>
             <tbody className="divide-y divide-[#D4AF37]/5">
-               {orders.filter((o: any) => 
                  o.user_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                  o.id.toString().includes(searchTerm)
                ).map((order: any) => (
@@ -605,9 +617,65 @@ function OrderView({ orders, searchTerm, onUpdateStatus, updateAmountPaid, onSel
    );
 }
 
+        <div key={order.id} className="bg-brand-warm p-6 md:p-12 rounded-[2rem] md:rounded-[4rem] border border-brand-primary/10 shadow-2xl flex flex-col lg:flex-row gap-6 md:gap-12">
+          {/* Reference Photo */}
+          <div className="lg:w-1/4 aspect-[3/4] bg-brand-light/5 rounded-[1.5rem] md:rounded-[3rem] overflow-hidden border border-brand-primary/5 relative group">
+             {order.original_photo ? (
+               <img src={order.original_photo.startsWith('http') ? order.original_photo : `${BASE_URL}${order.original_photo}`} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000" />
+             ) : (
+               <div className="absolute inset-0 flex flex-col items-center justify-center text-brand-primary/20 gap-4">
+                  <Camera size={32} />
+                  <span className="text-[9px] uppercase font-black tracking-widest">No Reference</span>
+               </div>
+             )}
+          </div>
+
+          <div className="flex-1 space-y-10">
+             <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                   <h3 className="text-4xl font-serif italic text-brand-secondary tracking-tighter">Customize on Your Style Registry #{order.id}</h3>
+                   <p className="text-[9px] font-black uppercase tracking-[0.4em] text-brand-primary font-serif italic">Artisanal Tailoring Required</p>
+                </div>
+                <div className="px-6 py-3 bg-brand-primary text-brand-secondary rounded-full text-[9px] font-black uppercase tracking-widest shadow-xl">
+                   {order.status_display}
+                </div>
+             </div>
+
+             <div className="grid md:grid-cols-3 gap-8 pt-8 border-t border-brand-primary/5">
+                <div className="space-y-4">
+                   <span className="text-[9px] font-black uppercase tracking-widest text-brand-primary italic">Silhouette Choices</span>
+                   <div className="space-y-2">
+                      <p className="text-sm font-serif italic text-brand-secondary">Fabric: {order.fabric_name || order.custom_fabric_preference || 'Client Material'}</p>
+                      <p className="text-sm font-serif italic text-brand-secondary">Neck: {order.neck_name}</p>
+                      <p className="text-sm font-serif italic text-brand-secondary">Sleeves: {order.sleeve_name}</p>
+                   </div>
+                </div>
+                <div className="col-span-2 space-y-4">
+                   <span className="text-[9px] font-black uppercase tracking-widest text-brand-primary italic">Fit Mapping (Inches)</span>
+                   <div className="flex flex-wrap gap-3">
+                      {order.measurements.map((m: any) => (
+                        <div key={m.id} className="bg-brand-light/5 px-4 py-2 rounded-xl border border-brand-primary/5">
+                           <span className="text-[8px] font-black uppercase tracking-widest block text-brand-primary/30">{m.part_name}</span>
+                           <span className="text-xl font-serif italic text-brand-secondary">{m.value}"</span>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+             </div>
+
+             <div className="flex justify-end gap-4 pt-4">
+                <button className="px-10 py-4 bg-brand-primary text-brand-secondary rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-transform">
+                   Start Hand-Cutting
+                </button>
+             </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 function InquiryView({ inquiries, searchTerm, onResolve }: any) {
-  return (
      <div className="grid md:grid-cols-2 gap-8">
         {inquiries.filter((i: any) => i.name.toLowerCase().includes(searchTerm.toLowerCase())).map((item: any) => (
            <div key={item.id} className={`p-6 md:p-12 rounded-[2rem] md:rounded-[3.5rem] border transition-all duration-700 ${item.status === 'resolved' ? 'bg-brand-warm opacity-40 grayscale border-brand-primary/10' : 'bg-brand-warm shadow-xl border-brand-primary/20 ring-4 ring-brand-primary/5'}`}>
@@ -656,7 +724,6 @@ function InquiryView({ inquiries, searchTerm, onResolve }: any) {
 }
 
 function DiaryManager({ diaries, searchTerm, onAdd, onDelete }: any) {
-  return (
     <div className="space-y-12">
        <button onClick={onAdd} className="w-full py-10 border-2 border-dashed border-brand-primary/20 rounded-[1.5rem] md:rounded-[3rem] text-brand-primary hover:text-brand-primary hover:border-brand-primary flex items-center justify-center gap-4 transition-all group">
          <Plus size={20} className="group-hover:rotate-90 transition-transform" />
@@ -694,7 +761,6 @@ function DiaryManager({ diaries, searchTerm, onAdd, onDelete }: any) {
 }
 
 function StoriesView({ stories, searchTerm, onApprove }: any) {
-  return (
      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {stories.filter((s: any) => s.name.toLowerCase().includes(searchTerm.toLowerCase())).map((story: any) => (
            <div key={story.id} className="bg-brand-warm p-10 rounded-[1.5rem] md:rounded-[3rem] border border-brand-primary/20 shadow-xl space-y-8 flex flex-col justify-between">
@@ -722,7 +788,6 @@ function StoriesView({ stories, searchTerm, onApprove }: any) {
 }
 
 function MemberView({ members, searchTerm, onAdd, onSelectMember }: any) {
-  return (
      <div className="space-y-12">
         <div className="flex justify-end items-center gap-4">
            <p className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37] italic opacity-40">Registry CRM Mode</p>
@@ -784,7 +849,6 @@ function MemberView({ members, searchTerm, onAdd, onSelectMember }: any) {
 
 function DashboardView({ stats }: any) {
   if (!stats) return null;
-  return (
     <div className="space-y-16">
        {/* High Level Stats */}
        <div className="grid md:grid-cols-3 gap-8">
@@ -906,10 +970,8 @@ function LiveSystemTerminal() {
       setLogs(prev => [log, ...prev].slice(0, 5));
     }, 3000);
     
-    return () => clearInterval(interval);
   }, []);
 
-  return (
     <div className="bg-[#1A0105] p-8 rounded-[2rem] border border-brand-primary/20 font-mono text-[10px] space-y-2 shadow-inner h-48 overflow-hidden relative">
        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#1A0105]/80 pointer-events-none" />
        {logs.map((log, i) => (
@@ -929,7 +991,6 @@ function LiveSystemTerminal() {
 function InventoryView({ products, categories, fabrics, searchTerm, onAddCategory, onAddProduct, onAddFabric }: any) {
   const [activeSubTab, setActiveSubTab] = useState<'products' | 'categories' | 'fabrics'>('products');
 
-  return (
     <div className="space-y-12">
        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
           <div className="flex gap-4 p-2 bg-brand-warm border border-brand-primary/20 rounded-2xl">
@@ -1021,7 +1082,6 @@ function InventoryView({ products, categories, fabrics, searchTerm, onAddCategor
 }
 
 function SettingsView({ config, setConfig, onSave }: any) {
-   return (
        <form onSubmit={onSave} className="grid md:grid-cols-2 gap-20">
           <div className="space-y-12">
              <div className="space-y-4">
@@ -1106,7 +1166,6 @@ function ArtisanCreatorModal({ onClose, onCreated }: any) {
     }
   };
 
-  return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-6">
        <div className="absolute inset-0 bg-brand-primary/80 backdrop-blur-2xl" onClick={onClose} />
        <motion.div 
@@ -1163,7 +1222,6 @@ function DiaryCreatorModal({ onClose, onCreated }: any) {
     }
   };
 
-  return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-6">
        <div className="absolute inset-0 bg-brand-primary/80 backdrop-blur-2xl" onClick={onClose} />
        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative bg-brand-warm p-6 md:p-16 rounded-[2rem] md:rounded-[4rem] max-w-2xl w-full border border-brand-primary/10 shadow-2xl space-y-10 max-h-[90vh] overflow-y-auto custom-scrollbar">
@@ -1222,7 +1280,6 @@ function CategoryCreatorModal({ onClose, onCreated }: any) {
     }
   };
 
-  return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-6">
        <div className="absolute inset-0 bg-brand-primary/80 backdrop-blur-2xl" onClick={onClose} />
        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative bg-brand-warm p-16 rounded-[4rem] max-w-xl w-full border border-brand-primary/10 shadow-2xl space-y-10">
@@ -1269,7 +1326,6 @@ function ProductCreatorModal({ categories, onClose, onCreated }: any) {
     }
   };
 
-  return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-6">
        <div className="absolute inset-0 bg-brand-primary/80 backdrop-blur-2xl" onClick={onClose} />
        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative bg-brand-warm p-16 rounded-[4rem] max-w-2xl w-full border border-brand-primary/10 shadow-2xl space-y-10 max-h-[90vh] overflow-y-auto no-scrollbar">
@@ -1325,7 +1381,6 @@ function FabricCreatorModal({ onClose, onCreated }: any) {
     }
   };
 
-  return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-6">
        <div className="absolute inset-0 bg-brand-primary/80 backdrop-blur-2xl" onClick={onClose} />
        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative bg-brand-warm p-16 rounded-[4rem] max-w-xl w-full border border-brand-primary/10 shadow-2xl space-y-10">
@@ -1362,7 +1417,6 @@ function MemberDetailDrawer({ memberId, onClose }: { memberId: number, onClose: 
       .finally(() => setLoading(false));
   }, [memberId]);
 
-  return (
     <div className="fixed inset-0 z-[130] flex justify-end">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-[#FAF9F6]/80 backdrop-blur-md" />
       <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }} className="relative w-full max-w-3xl bg-brand-warm h-full shadow-[-30px_0_100px_rgba(0,0,0,0.5)] border-l border-brand-primary/30 overflow-y-auto no-scrollbar">
@@ -1470,7 +1524,6 @@ function OrderDetailDrawer({ order, onClose, onUpdate }: { order: Order, onClose
     }
   };
 
-  return (
     <div className="fixed inset-0 z-[100] flex justify-end">
       <motion.div 
         initial={{ opacity: 0 }} 
